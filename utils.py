@@ -35,9 +35,15 @@ class Dataset(torch.utils.data.Dataset):
 
 
 def load_data(data_name="MNIST",
-              batch_size_train=64,
-              batch_size_test=1000,
+              batch_size_train=32,
+              batch_size_test=32,
               normalize=True):
+
+    def _get_index_train_test_path(split_num, dir_path, train = True):
+        if train:
+            return dir_path + "index_train_" + str(split_num) + ".txt"
+        else:
+            return dir_path + "index_test_" + str(split_num) + ".txt"
 
     if data_name=="MNIST":
         train_set = torchvision.datasets.MNIST('./data', train=True, download=True,
@@ -76,13 +82,15 @@ def load_data(data_name="MNIST",
                                      ])),
           batch_size=batch_size_test, shuffle=True)
 
+        return train_set, test_set, train_loader, test_loader, 0, 0, 0, 0
+
     else:
 
         data_path = "./data/"+data_name+"/data/data.txt"
         dir_path = "./data/"+data_name+"/data/"
         _INDEX_FEATURES_FILE = "./data/"+data_name+"/data/index_features.txt"
         _INDEX_TARGET_FILE = "./data/"+data_name+"/data/index_target.txt"
-        n_split = np.loadtxt("./data/"+data_name+"/data/n_splits.txt")
+        #n_split = np.loadtxt("./data/"+data_name+"/data/n_splits.txt")
         index_train = np.loadtxt(_get_index_train_test_path(0, dir_path=dir_path, train=True))
         index_test = np.loadtxt(_get_index_train_test_path(0, dir_path=dir_path, train=False))
 
@@ -98,6 +106,16 @@ def load_data(data_name="MNIST",
         y_mean=np.mean(y)
         y_std=np.std(y)
 
+        ids_rem=[]
+        for i in range(X_std.shape[0]):
+            if X_std[i]==0:
+                ids_rem.append(i)
+
+        for i in ids_rem:
+            X = np.concatenate((X[:,:i],X[:,i+1:]),axis=1)
+            X_mean = np.concatenate((X_mean[:i],X_mean[i+1:]),axis=0)
+            X_std = np.concatenate((X_std[:i],X_std[i+1:]),axis=0)
+
         if normalize:
             X=(X-X_mean)/X_std
             y=(y-y_mean)/y_std
@@ -112,23 +130,47 @@ def load_data(data_name="MNIST",
         train_set = Dataset(X=X_train, y=y_train)
         test_set = Dataset(X=X_test, y=y_test)
 
-        train_loader=torch.utils.data.DataLoader(train_set, batch_size=batch_size_train,shuffle=True)
-        test_loader=torch.utils.data.DataLoader(test_set, batch_size=batch_size_test,shuffle=True)
+        train_loader=torch.utils.data.DataLoader(train_set, batch_size=batch_size_train,shuffle=False)
+        test_loader=torch.utils.data.DataLoader(test_set, batch_size=batch_size_test,shuffle=False)
 
 
-    return train_set, test_set, train_loader, test_loader, X_mean, X_std, y_mean, y_std
+        return train_set, test_set, train_loader, test_loader, X_mean, X_std, y_mean, y_std
 
 
+def prediction(network,testing_set,normalize=True):
 
-def _get_index_train_test_path(split_num, dir_path, train = True):
-    """
-       Method to generate the path containing the training/test split for the given
-       split number (generally from 1 to 20).
-       @param split_num      Split number for which the data has to be generated
-       @param train          Is true if the data is training data. Else false.
-       @return path          Path of the file containing the requried data
-    """
-    if train:
-        return dir_path + "index_train_" + str(split_num) + ".txt"
-    else:
-        return dir_path + "index_test_" + str(split_num) + ".txt"
+    #network.eval()
+    with torch.no_grad():
+        if normalize:
+            standard_pred = y_std*network(testing_set.data).squeeze(dim=1)+y_mean
+        else:
+            standard_pred = network(testing_set.data)
+
+    rmse_standard_pred = np.mean((y_std*testing_set.targets.numpy()+y_mean - standard_pred.numpy())**2.)**0.5
+
+    T = 10
+
+    Yt_hat=[]
+    for _ in range(T):
+        Yt_hat.append(network(testing_set.data).squeeze(dim=1).data.numpy())
+        #optimizer.step()
+    Yt_hat=np.array(Yt_hat)
+    if normalize:
+        Yt_hat = Yt_hat * y_std + y_mean
+    MC_pred = np.mean(Yt_hat, 0)
+    rmse = np.mean((testing_set.targets.numpy()*y_std + y_mean - MC_pred)**2.)**0.5
+
+    # We compute the test log-likelihood
+    ll = (logsumexp(-0.5 * tau * (testing_set.targets.numpy()* y_std + y_mean - Yt_hat)**2., 0) - np.log(T)
+        - 0.5*np.log(2*np.pi) + 0.5*np.log(tau))
+    test_ll = np.mean(ll)
+
+    # We are done!
+    print("RMSE Standard pred")
+    print(rmse_standard_pred)
+    print("RMSE MC pred")
+    print(rmse)
+    print("LL")
+    print(test_ll)
+
+    return rmse_standard_pred, rmse, test_ll
