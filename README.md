@@ -10,11 +10,11 @@ The repository is mainly composed of 3 files:
 
 - `utils.py` : provides the useful function to construct Pytorch Dataset object and loader and preprocessing functions
 
-- `experiments.ipynb` : progressive notebook to present the diverse experiments
+- `Experiments.ipynb` : progressive notebook to present the diverse experiments
 
 ## Experiments
 
-All the experiments are gathered in the notebook  `experiments.ipynb` . It provides a code that has been commented step by step . The notebook is organized in the parts:
+All the experiments are gathered in the notebook  `Experiments.ipynb` . It provides a code that has been commented step by step . The notebook is organized in three parts:
 
 - __Part 1__: Run an experiment (tutorial). This first part shows step by step how we ran our experiments. If you want to reproduce a single experiment, you just have to run this part
 
