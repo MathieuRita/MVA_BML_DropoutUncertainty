@@ -20,9 +20,8 @@ All the experiments are gathered in the notebook  `experiments.ipynb` . It provi
 
 - __Part 2__ : Behaviour of the Dropout network on regression task (*code for the section 4.3 of the report*) : analyze of the predictive performance via RMSE and predictive LL evaluation. Comparison with state-of-the-art methods.
 
-![im1]("https://github.com/MathieuRita/MVA_BML_DropoutUncertainty/blob/master/figures/bml_figure_3.png?raw=true")
-
 - __Part 3__ : Behaviour of the Dropout network on classification task (*code for the section 4.2 of the report*): analyze of the uncertainty of the classification on MNIST dataset.
 
-![im2]("https://github.com/MathieuRita/MVA_BML_DropoutUncertainty/blob/master/figures/fig_BML.png?raw=true")
+## Additional content
 
+You can also find in the repository different examples of datasets we use both for regression and classification in the folder data. Then, we also put the report of our projet `report.pdf`. The latter presents the mathematical theory introduced in the paper.
