@@ -24,4 +24,4 @@ All the experiments are gathered in the notebook  `Experiments.ipynb` . It provi
 
 ## Additional content
 
-You can also find in the repository different examples of datasets we use both for regression and classification in the folder data. Then, we also put the report of our projet `report.pdf`. The latter presents the mathematical theory introduced in the paper.
+You can also find in the repository different examples of datasets we use both for regression and classification in the folder data. Then, we also put the [report](https://github.com/MathieuRita/MVA_BML_DropoutUncertainty/blob/master/report.pdf) of our projet in the repository. The latter presents the mathematical theory introduced in the paper.
